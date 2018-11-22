@@ -7,9 +7,9 @@ import (
     "os/signal"
     "syscall"
 
-    "github.com/grisha/gowebapp/db"
-    "github.com/grisha/gowebapp/model"
-    "github.com/grisha/gowebapp/ui"
+    "github.com/petterhg/go-webapp/db"
+    "github.com/petterhg/go-webapp/model"
+    "github.com/petterhg/go-webapp/ui"
 )
 
 type Config struct {
