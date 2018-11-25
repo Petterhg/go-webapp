@@ -1,69 +1,69 @@
 package db
 
-
 import (
-    "database/sql"
+	"go-webapp/model"
+	"log"
 
-    "github.com/petterhg/go-webapp/model"
-    "github.com/jmoiron/sqlx"
-    _ "github.com/lib/pq"
+	"github.com/jmoiron/sqlx"
+	_ "github.com/lib/pq"
 )
 
 type Config struct {
-    ConnectString string
+	ConnectString string
 }
 
 type pgDb struct {
-    dbConn *sqlx.DB
+	dbConn *sqlx.DB
 
-    sqlSelectUser *sqlx.Stmt
+	sqlSelectUser *sqlx.Stmt
 }
-
 
 func InitDb(cfg Config) (*pgDb, error) {
-    if dbConn, err := sqlx.Connect("postgres", cfg.ConnectString); err != nil {
-        return nil, err
-    } else {
-        p := &pgDb{dbConn: dbConn}
-        if err := p.dbConn.Ping(); err != nil {
-            return nil, err
-        }
-        if err := p.createTablesIfNotExist(); err != nil {
-            return nil, err
-        }
-        if err := p.prepareSqlStatements(); err != nil {
-            return nil, err
-        }
-        return p, nil
-    }
+	if dbConn, err := sqlx.Connect("postgres", cfg.ConnectString); err != nil {
+		return nil, err
+	} else {
+		p := &pgDb{dbConn: dbConn}
+		if err := p.dbConn.Ping(); err != nil {
+			log.Printf("Could not ping database: %v\n", err)
+			return nil, err
+		}
+		if err := p.createTablesIfNotExist(); err != nil {
+			log.Printf("Could not create table: %v\n", err)
+			return nil, err
+		}
+		if err := p.prepareSqlStatements(); err != nil {
+			log.Printf("Could not run prepared sql statement: %v\n", err)
+			return nil, err
+		}
+		return p, nil
+	}
 }
-
 
 func (p *pgDb) createTablesIfNotExist() error {
-    create_sql := `
-
-       CREATE TABLE IF NOT EXISTS users (
-       id SERIAL NOT NULL PRIMARY KEY,
-       first TEXT NOT NULL,
-       last TEXT NOT NULL);
-
-    `
-    if rows, err := p.dbConn.Query(create_sql); err != nil {
-        return err
-    } else {
-        rows.Close()
-    }
-    return nil
+	create_sql := "CREATE TABLE IF NOT EXISTS users (id SERIAL NOT NULL PRIMARY KEY, firstname TEXT NOT NULL, lastname TEXT NOT NULL)"
+	if rows, err := p.dbConn.Query(create_sql); err != nil {
+		return err
+	} else {
+		rows.Close()
+	}
+	return nil
 }
-
 
 func (p *pgDb) prepareSqlStatements() (err error) {
 
-    if p.sqlSelectUser, err = p.dbConn.Preparex(
-        "SELECT id, first, last FROM users",
-    ); err != nil {
-        return err
-    }
+	if p.sqlSelectUser, err = p.dbConn.Preparex(
+		"SELECT id, firstname, lastname FROM users",
+	); err != nil {
+		return err
+	}
 
-    return nil
+	return nil
+}
+
+func (p *pgDb) SelectUser() ([]*model.User, error) {
+	user := make([]*model.User, 0)
+	if err := p.sqlSelectUser.Select(&user); err != nil {
+		return nil, err
+	}
+	return user, nil
 }

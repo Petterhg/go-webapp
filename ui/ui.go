@@ -1,30 +1,30 @@
 package ui
 
 import (
-    "fmt"
-    "net"
-    "net/http"
-    "time"
-
-    "github.com/petterhg/go-webapp/model"
+	"encoding/json"
+	"fmt"
+	"go-webapp/model"
+	"net"
+	"net/http"
+	"time"
 )
 
 type Config struct {
-    Assets http.FileSystem
+	Assets http.FileSystem
 }
 
 func Start(cfg Config, m *model.Model, listener net.Listener) {
 
-    server := &http.Server{
-        ReadTimeout:    5 * time.Second,
-        WriteTimeout:   60 * time.Second,
-        MaxHeaderBytes: 1 << 16}
+	server := &http.Server{
+		ReadTimeout:    5 * time.Second,
+		WriteTimeout:   60 * time.Second,
+		MaxHeaderBytes: 1 << 16}
 
 	http.Handle("/", indexHandler(m))
 	http.Handle("/users", userHandler(m))
 	http.Handle("/js/", http.FileServer(cfg.Assets))
 
-    go server.Serve(listener)
+	go server.Serve(listener)
 }
 
 const (
@@ -53,9 +53,9 @@ const indexHTML = `
 `
 
 func indexHandler(m *model.Model) http.Handler {
-    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-        fmt.Fprintf(w, indexHTML)
-    })
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, indexHTML)
+	})
 }
 
 func userHandler(m *model.Model) http.Handler {
